@@ -24,9 +24,13 @@ const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const seedDB = async () => {
     await Campground.deleteMany({});
     for (let i = 0; i < 50; i++) {
+        const price = Math.ceil(Math.random() * 200);
         const c = new Campground({
             title: `${random(descriptors)} ${random(places)}`,
+            image: "https://source.unsplash.com/collection/483251/200x200",
             location: `${random(cities).city}, ${random(cities).state}`,
+            description: "blah blah blah blah",
+            price,
         });
         await c.save();
     }
@@ -35,3 +39,4 @@ const seedDB = async () => {
 seedDB().then(() => {
     mongoose.connection.close();
 });
+
