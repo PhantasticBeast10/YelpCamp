@@ -3,21 +3,30 @@
 <div class="row">
     <h1 class="text-center">New Campground</h1>
     <div class="col-6 offset-3">
-        <form action="/campgrounds/new" method="post">
+        <form action="/campgrounds/new" method="post" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label class="form-label" for="title">Title</label>
-                <input class="form-control" type="text" id="title" name="campground[title]">
+                <input class="form-control" type="text" id="title" name="campground[title]" required>
+                <div class="valid-feedback">
+                    Looks Good!
+                </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label" for="location">Location</label>
-                <input class="form-control" type="text" id="location" name="campground[location]">
+                <input class="form-control" type="text" id="location" name="campground[location]" required>
+                <div class="valid-feedback">
+                    Looks Good!
+                </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label" for="description">Description</label>
-                <textarea class="form-control" name="campground[description]" id="description" cols="30"
-                    rows="10"></textarea>
+                <textarea class="form-control" name="campground[description]" id="description" cols="30" rows="10"
+                    required></textarea>
+                <div class="valid-feedback">
+                    Looks Good!
+                </div>
             </div>
 
             <div class="mb-3">
@@ -25,14 +34,20 @@
                 <div class="input-group">
                     <span class="input-group-text">$</span>
                     <input name="campground[price]" type="text" class="form-control"
-                        aria-label="Amount (to the nearest dollar)">
+                        aria-label="Amount (to the nearest dollar)" required>
                     <span class="input-group-text">.00</span>
+                    <div class="valid-feedback">
+                        Looks Good!
+                    </div>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label" for="image">Image URL</label>
-                <input class="form-control" type="text" name="campground[image]" id="image">
+                <input class="form-control" type="text" name="campground[image]" id="image" required>
+                <div class="valid-feedback">
+                    Looks Good!
+                </div>
             </div>
 
             <div class="mb-3">
