@@ -7,8 +7,12 @@ const ejsMate = require("ejs-mate");
 const ExpressError = require("./utilities/ExpressError");
 
 const Campground = require("./models/campground");
+const Review = require("./models/review");
 const catchAsync = require("./utilities/catchAsync");
-const campgroundValidationSchema = require("./validationSchemas");
+const {
+    campgroundValidationSchema,
+    reviewValidationSchema,
+} = require("./validationSchemas");
 
 mongoose.connect("mongodb://localhost:27017/yelpcamp", {
     useNewUrlParser: true,
@@ -27,7 +31,17 @@ const validateCampground = (req, res, next) => {
         const msg = error.details.map((d) => d.message).join("\n");
         throw new ExpressError(400, msg);
     } else {
-        next()
+        next();
+    }
+};
+
+const validateReview = (req, res, next) => {
+    const { error } = reviewValidationSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map((d) => d.message).join("\n");
+        throw new ExpressError(400, msg);
+    } else {
+        next();
     }
 };
 
@@ -58,7 +72,9 @@ app.get("/campgrounds/new", (req, res) => {
 app.get(
     "/campgrounds/:id",
     catchAsync(async (req, res) => {
-        const campground = await Campground.findById(req.params.id);
+        const campground = await Campground.findById(req.params.id).populate(
+            "reviews"
+        );
         res.render("campgrounds/show", { campground });
     })
 );
@@ -97,6 +113,32 @@ app.delete(
     catchAsync(async (req, res) => {
         await Campground.findByIdAndDelete(req.params.id);
         res.redirect("/campgrounds");
+    })
+);
+
+app.post(
+    "/campgrounds/:id/reviews",
+    validateReview,
+    catchAsync(async (req, res) => {
+        const campground = await Campground.findById(req.params.id);
+        const review = req.body.review;
+        const newReview = new Review(review);
+        campground.reviews.push(newReview);
+        await newReview.save();
+        await campground.save();
+        res.redirect("/campgrounds/" + req.params.id);
+    })
+);
+
+app.delete(
+    "/campgrounds/:campId/reviews/:reviewId",
+    catchAsync(async (req, res) => {
+        const { campId, reviewId } = req.params;
+        const campground = await Campground.findById(campId);
+        campground.reviews.filter((review) => review.id !== reviewId);
+        await Review.findByIdAndDelete(reviewId);
+        await campground.save();
+        res.redirect("/campgrounds/" + campId);
     })
 );
 
