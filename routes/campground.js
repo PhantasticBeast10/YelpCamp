@@ -9,6 +9,8 @@ const Campground = require("../models/campground");
 const { campgroundValidationSchema } = require("../validationSchemas");
 const { reset } = require("nodemon");
 
+const isLoggedIn = require("../middleware");
+
 const validateCampground = (req, res, next) => {
     const { error } = campgroundValidationSchema.validate(req.body);
     if (error) {
@@ -27,7 +29,7 @@ router.get(
     })
 );
 
-router.get("/new", (req, res) => {
+router.get("/new", isLoggedIn, (req, res) => {
     res.render("campgrounds/new");
 });
 
@@ -47,6 +49,7 @@ router.get(
 
 router.get(
     "/:id/edit",
+    isLoggedIn,
     catchAsync(async (req, res) => {
         const campground = await Campground.findById(req.params.id);
         if (!campground) {
@@ -59,6 +62,7 @@ router.get(
 
 router.post(
     "/new",
+    isLoggedIn,
     validateCampground,
     catchAsync(async (req, res, next) => {
         const campground = req.body.campground;
@@ -71,6 +75,7 @@ router.post(
 
 router.patch(
     "/:id",
+    isLoggedIn,
     validateCampground,
     catchAsync(async (req, res) => {
         const updatedCampground = { ...req.body.campground };
@@ -82,6 +87,7 @@ router.patch(
 
 router.delete(
     "/:id",
+    isLoggedIn,
     catchAsync(async (req, res) => {
         await Campground.findByIdAndDelete(req.params.id);
         req.flash("success", "Successfully deleted campground");
