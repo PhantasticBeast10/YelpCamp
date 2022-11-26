@@ -1,25 +1,13 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
 
-const ExpressError = require("../utilities/ExpressError");
+// const ExpressError = require("../utilities/ExpressError");
 const catchAsync = require("../utilities/catchAsync");
 
 const Campground = require("../models/campground");
 const Review = require("../models/review");
 
-const { reviewValidationSchema } = require("../validationSchemas");
-
-const isLoggedIn = require("../middleware");
-
-const validateReview = (req, res, next) => {
-    const { error } = reviewValidationSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map((d) => d.message).join("\n");
-        throw new ExpressError(400, msg);
-    } else {
-        next();
-    }
-};
+const { isLoggedIn, validateReview, verifyAuthor } = require("../middleware");
 
 router.post(
     "/",
@@ -28,6 +16,7 @@ router.post(
     catchAsync(async (req, res) => {
         const campground = await Campground.findById(req.params.campId);
         const review = req.body.review;
+        review.author = req.user._id;
         const newReview = new Review(review);
         campground.reviews.push(newReview);
         await newReview.save();
@@ -40,6 +29,7 @@ router.post(
 router.delete(
     "/:reviewId",
     isLoggedIn,
+    verifyAuthor,
     catchAsync(async (req, res) => {
         const { campId, reviewId } = req.params;
         const campground = await Campground.findById(campId);

@@ -26,6 +26,7 @@ const seedDB = async () => {
     for (let i = 0; i < 50; i++) {
         const price = Math.ceil(Math.random() * 200);
         const c = new Campground({
+            owner: "637099946b0b32f7d6d94356",
             title: `${random(descriptors)} ${random(places)}`,
             image: "https://source.unsplash.com/collection/483251/200x200",
             location: `${random(cities).city}, ${random(cities).state}`,
@@ -39,4 +40,3 @@ const seedDB = async () => {
 seedDB().then(() => {
     mongoose.connection.close();
 });
-
