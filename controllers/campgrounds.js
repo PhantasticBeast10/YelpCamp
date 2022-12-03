@@ -1,3 +1,4 @@
+const { cloudinary } = require("../cloudinary");
 const Campground = require("../models/campground");
 
 const index = async (req, res) => {
@@ -30,17 +31,38 @@ const renderEditForm = async (req, res) => {
 };
 
 const createCampground = async (req, res, next) => {
-    const campground = req.body.campground;
-    campground.owner = req.user._id;
-    const newCampground = new Campground(campground);
+    const newCampground = new Campground(req.body.campground);
+    newCampground.images = req.files.map((file) => ({
+        url: file.path,
+        filename: file.filename,
+    }));
+    newCampground.owner = req.user._id;
     await newCampground.save();
-    req.flash("success", "Successfully created campground");
+    console.log(newCampground);
+    req.flash("success", "Successfully created campground!");
     res.redirect(`/campgrounds/${newCampground._id}`);
 };
 
 const updateCampground = async (req, res) => {
-    const updatedCampground = { ...req.body.campground };
-    await Campground.findByIdAndUpdate(req.params.id, updatedCampground);
+    const campground = { ...req.body.campground };
+    const updatedCampground = await Campground.findByIdAndUpdate(
+        req.params.id,
+        campground
+    );
+    if (req.body.deleteImages) {
+        for (let filename of req.body.deleteImages) {
+            await cloudinary.uploader.destroy(filename);
+        }
+        await updatedCampground.updateOne({
+            $pull: { images: { filename: { $in: req.body.deleteImages } } },
+        });
+    }
+    const images = req.files.map((file) => ({
+        url: file.path,
+        filename: file.filename,
+    }));
+    updatedCampground.images.push(...images);
+    await updatedCampground.save();
     req.flash("success", "Successfully updated campground");
     res.redirect(`/campgrounds/${req.params.id}`);
 };
@@ -49,7 +71,7 @@ const deleteCampground = async (req, res) => {
     await Campground.findByIdAndDelete(req.params.id);
     req.flash("success", "Successfully deleted campground");
     res.redirect("/campgrounds");
-}
+};
 
 module.exports = {
     index,
@@ -58,5 +80,5 @@ module.exports = {
     renderEditForm,
     createCampground,
     updateCampground,
-    deleteCampground
+    deleteCampground,
 };

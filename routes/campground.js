@@ -11,11 +11,16 @@ const {
     verifyOwner,
 } = require("../middleware");
 
+const multer = require("multer");
+const { storage } = require("../cloudinary");
+const upload = multer({ storage });
+
 router
     .route("/")
     .get(catchAsync(campgrounds.index))
     .post(
         isLoggedIn,
+        upload.array("image"),
         validateCampground,
         catchAsync(campgrounds.createCampground)
     );
@@ -27,6 +32,7 @@ router
     .get(catchAsync(campgrounds.showCampground))
     .patch(
         isLoggedIn,
+        upload.array("image"),
         validateCampground,
         verifyOwner,
         catchAsync(campgrounds.updateCampground)
