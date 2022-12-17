@@ -22,8 +22,13 @@ const reviewRoutes = require("./routes/review");
 const userRoutes = require("./routes/user");
 
 const mongoSanitize = require("express-mongo-sanitize");
+const MongoStore = require("connect-mongo");
 
-mongoose.connect("mongodb://localhost:27017/yelpcamp", {
+const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/yelpcamp";
+
+// "mongodb://localhost:27017/yelpcamp"
+
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
@@ -54,7 +59,7 @@ const scriptSrcUrls = [
     "https://kit.fontawesome.com/",
     "https://cdnjs.cloudflare.com/",
     "https://cdn.jsdelivr.net/",
-    "https://res.cloudinary.com/dv53bipye/"
+    "https://res.cloudinary.com/dv53bipye/",
 ];
 const styleSrcUrls = [
     "https://kit-free.fontawesome.com/",
@@ -64,45 +69,54 @@ const styleSrcUrls = [
     "https://fonts.googleapis.com/",
     "https://use.fontawesome.com/",
     "https://cdn.jsdelivr.net/",
-    "https://res.cloudinary.com/dv53bipye/"
+    "https://res.cloudinary.com/dv53bipye/",
 ];
 const connectSrcUrls = [
     "https://*.tiles.mapbox.com",
     "https://api.mapbox.com",
     "https://events.mapbox.com",
-    "https://res.cloudinary.com/dv53bipye/"
+    "https://res.cloudinary.com/dv53bipye/",
 ];
-const fontSrcUrls = [ "https://res.cloudinary.com/dv53bipye/" ];
- 
+const fontSrcUrls = ["https://res.cloudinary.com/dv53bipye/"];
+
 app.use(
     helmet({
         contentSecurityPolicy: {
-            directives : {
-                defaultSrc : [],
-                connectSrc : [ "'self'", ...connectSrcUrls ],
-                scriptSrc  : [ "'unsafe-inline'", "'self'", ...scriptSrcUrls ],
-                styleSrc   : [ "'self'", "'unsafe-inline'", ...styleSrcUrls ],
-                workerSrc  : [ "'self'", "blob:" ],
-                objectSrc  : [],
-                imgSrc     : [
+            directives: {
+                defaultSrc: [],
+                connectSrc: ["'self'", ...connectSrcUrls],
+                scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+                styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+                workerSrc: ["'self'", "blob:"],
+                objectSrc: [],
+                imgSrc: [
                     "'self'",
                     "blob:",
                     "data:",
                     "https://res.cloudinary.com/dv53bipye/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
-                    "https://images.unsplash.com/"
+                    "https://images.unsplash.com/",
                 ],
-                fontSrc    : [ "'self'", ...fontSrcUrls ],
-                mediaSrc   : [ "https://res.cloudinary.com/dv53bipye/" ],
-                childSrc   : [ "blob:" ]
-            }
+                fontSrc: ["'self'", ...fontSrcUrls],
+                mediaSrc: ["https://res.cloudinary.com/dv53bipye/"],
+                childSrc: ["blob:"],
+            },
         },
-        crossOriginEmbedderPolicy: false
+        crossOriginEmbedderPolicy: false,
     })
 );
 
+const secret = process.env.SECRET || "wazzup"
+
+const store = new MongoStore({
+    mongoUrl: dbUrl,
+    secret,
+    touchAfter: 24 * 60 * 60,
+});
+
 const sessionConfig = {
+    store,
     name: "session",
-    secret: "wazzup",
+    secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -112,6 +126,7 @@ const sessionConfig = {
         maxAge: 7 * 24 * 60 * 60 * 1000,
     },
 };
+
 app.use(session(sessionConfig));
 app.use(flash());
 
