@@ -13,12 +13,15 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
+const helmet = require("helmet");
 
 const ExpressError = require("./utilities/ExpressError");
 
 const campgroundRoutes = require("./routes/campground");
 const reviewRoutes = require("./routes/review");
 const userRoutes = require("./routes/user");
+
+const mongoSanitize = require("express-mongo-sanitize");
 
 mongoose.connect("mongodb://localhost:27017/yelpcamp", {
     useNewUrlParser: true,
@@ -40,12 +43,71 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use(mongoSanitize());
+
+app.use(helmet({ crossOriginEmbedderPolicy: false }));
+
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://api.mapbox.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://res.cloudinary.com/dv53bipye/"
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.mapbox.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://res.cloudinary.com/dv53bipye/"
+];
+const connectSrcUrls = [
+    "https://*.tiles.mapbox.com",
+    "https://api.mapbox.com",
+    "https://events.mapbox.com",
+    "https://res.cloudinary.com/dv53bipye/"
+];
+const fontSrcUrls = [ "https://res.cloudinary.com/dv53bipye/" ];
+ 
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives : {
+                defaultSrc : [],
+                connectSrc : [ "'self'", ...connectSrcUrls ],
+                scriptSrc  : [ "'unsafe-inline'", "'self'", ...scriptSrcUrls ],
+                styleSrc   : [ "'self'", "'unsafe-inline'", ...styleSrcUrls ],
+                workerSrc  : [ "'self'", "blob:" ],
+                objectSrc  : [],
+                imgSrc     : [
+                    "'self'",
+                    "blob:",
+                    "data:",
+                    "https://res.cloudinary.com/dv53bipye/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+                    "https://images.unsplash.com/"
+                ],
+                fontSrc    : [ "'self'", ...fontSrcUrls ],
+                mediaSrc   : [ "https://res.cloudinary.com/dv53bipye/" ],
+                childSrc   : [ "blob:" ]
+            }
+        },
+        crossOriginEmbedderPolicy: false
+    })
+);
+
 const sessionConfig = {
+    name: "session",
     secret: "wazzup",
     resave: false,
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
+        // secure: true,
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
     },
